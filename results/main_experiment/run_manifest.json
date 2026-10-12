@@ -1,0 +1,63 @@
+{
+  "dataset": "experiment/data/experiment_tasks.jsonl",
+  "dataset_sha256": "1c05fc9bdba78fd96f491a3ec767edb552b96222685cf9213b255414bb1968c1",
+  "tasks": 227,
+  "conditions": 8,
+  "jobs": 1816,
+  "model": "gpt-5.6-sol",
+  "api": "Responses",
+  "reasoning": {
+    "mode": "standard",
+    "effort": "low"
+  },
+  "condition_factors": [
+    {
+      "condition_id": "C1",
+      "persona": false,
+      "signature": false,
+      "cot": false
+    },
+    {
+      "condition_id": "C2",
+      "persona": false,
+      "signature": true,
+      "cot": false
+    },
+    {
+      "condition_id": "C3",
+      "persona": false,
+      "signature": false,
+      "cot": true
+    },
+    {
+      "condition_id": "C4",
+      "persona": false,
+      "signature": true,
+      "cot": true
+    },
+    {
+      "condition_id": "C5",
+      "persona": true,
+      "signature": false,
+      "cot": false
+    },
+    {
+      "condition_id": "C6",
+      "persona": true,
+      "signature": true,
+      "cot": false
+    },
+    {
+      "condition_id": "C7",
+      "persona": true,
+      "signature": false,
+      "cot": true
+    },
+    {
+      "condition_id": "C8",
+      "persona": true,
+      "signature": true,
+      "cot": true
+    }
+  ]
+}

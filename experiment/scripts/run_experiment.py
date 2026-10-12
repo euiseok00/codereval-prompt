@@ -93,9 +93,12 @@ def plan():
         "tasks": len(tasks),
         "conditions": len(CONDITIONS),
         "jobs": len(jobs),
+        "expected_jobs": len(jobs),
         "model": "gpt-5.6-sol",
         "api": "Responses",
-        "reasoning": {"mode": "standard", "effort": "low"},
+        "reasoning_mode": "standard",
+        "reasoning_effort": "none",
+        "reasoning": {"mode": "standard", "effort": "none"},
         "condition_factors": [
             {"condition_id": name, "persona": p, "signature": s, "cot": c}
             for name, p, s, c in CONDITIONS
@@ -136,14 +139,18 @@ def value(obj, field):
     return getattr(obj, field, None) if obj is not None else None
 
 
-def generate(confirmed):
+def generate(confirmed, max_jobs=None):
     if not confirmed:
         raise SystemExit("generate requires --confirm-full-run")
     jobs = planned_jobs()
     done = completed(RESULTS / "generations.jsonl")
     from openai import OpenAI
 
-    client = OpenAI(max_retries=0)
+    gateway_key = os.environ.get("BAZE_API_KEY")
+    if not gateway_key:
+        raise SystemExit("BAZE_API_KEY is required")
+    client = OpenAI(api_key=gateway_key, base_url="https://factchat-cloud.mindlogic.ai/v1/gateway", max_retries=0)
+    generated_count = 0
     with (RESULTS / "generations.jsonl").open("a", encoding="utf-8", newline="\n") as file:
         for job in jobs:
             if job["job_id"] in done:
@@ -152,7 +159,7 @@ def generate(confirmed):
             response = client.responses.create(
                 model="gpt-5.6-sol",
                 input=job["prompt"],
-                reasoning={"mode": "standard", "effort": "low"},
+                reasoning={"mode": "standard", "effort": "none"},
                 service_tier="default",
             )
             latency = time.perf_counter() - start
@@ -165,6 +172,7 @@ def generate(confirmed):
                 "raw_response": response.model_dump(mode="json"),
                 "generated_code": response.output_text,
                 "request_model": "gpt-5.6-sol",
+                "api_provider": "baze_gateway",
                 "response_model": response.model,
                 "response_id": response.id,
                 "response_status": value(response, "status"),
@@ -181,6 +189,9 @@ def generate(confirmed):
             append_result(file, row)
             done[job["job_id"]] = row
             print(f"generated {job['job_id']}", flush=True)
+            generated_count += 1
+            if max_jobs is not None and generated_count >= max_jobs:
+                break
 
 
 EVALUATOR = r'''
@@ -279,14 +290,16 @@ def main():
     parser = argparse.ArgumentParser()
     modes = parser.add_subparsers(dest="mode", required=True)
     modes.add_parser("plan")
-    modes.add_parser("generate").add_argument("--confirm-full-run", action="store_true")
+    generate_parser = modes.add_parser("generate")
+    generate_parser.add_argument("--confirm-full-run", action="store_true")
+    generate_parser.add_argument("--max-jobs", type=int, choices=range(1, 1817))
     modes.add_parser("evaluate")
     modes.add_parser("summarize")
     args = parser.parse_args()
     if args.mode == "plan":
         plan()
     elif args.mode == "generate":
-        generate(args.confirm_full_run)
+        generate(args.confirm_full_run, args.max_jobs)
     elif args.mode == "evaluate":
         evaluate()
     else:

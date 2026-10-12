@@ -4,11 +4,14 @@
   "tasks": 227,
   "conditions": 8,
   "jobs": 1816,
+  "expected_jobs": 1816,
   "model": "gpt-5.6-sol",
   "api": "Responses",
+  "reasoning_mode": "standard",
+  "reasoning_effort": "none",
   "reasoning": {
     "mode": "standard",
-    "effort": "low"
+    "effort": "none"
   },
   "condition_factors": [
     {

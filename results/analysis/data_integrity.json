@@ -1,0 +1,32 @@
+{
+  "planned_jobs": 1816,
+  "unique_job_ids": 1816,
+  "generations": 1816,
+  "evaluations": 1816,
+  "missing_generations": 0,
+  "missing_evaluations": 0,
+  "duplicate_job_ids": 0,
+  "response_model_all_gpt_5_6_sol": true,
+  "reasoning_tokens_all_zero": true,
+  "missing_token_counts": {
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "total_tokens": 0
+  },
+  "providers": {
+    "baze_gateway": {
+      "count": 781,
+      "response_models": [
+        "gpt-5.6-sol"
+      ],
+      "reasoning_tokens_all_zero": true
+    },
+    "openai_direct": {
+      "count": 1035,
+      "response_models": [
+        "gpt-5.6-sol"
+      ],
+      "reasoning_tokens_all_zero": true
+    }
+  }
+}

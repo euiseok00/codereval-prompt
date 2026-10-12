@@ -3,6 +3,7 @@
 import contextlib
 import io
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -43,17 +44,19 @@ class ExperimentRunnerTests(unittest.TestCase):
             status="completed", model_dump=lambda **_: {"output": "raw response"},
         )
         client = SimpleNamespace(responses=SimpleNamespace(create=Mock(return_value=response)))
-        fake_openai = SimpleNamespace(OpenAI=lambda **_: client)
+        factory = Mock(return_value=client)
+        fake_openai = SimpleNamespace(OpenAI=factory)
         with tempfile.TemporaryDirectory(dir=runner.ROOT) as directory:
-            with patch.object(runner, "RESULTS", Path(directory)), patch.object(runner, "planned_jobs", return_value=[job]), patch.dict(sys.modules, {"openai": fake_openai}):
+            with patch.object(runner, "RESULTS", Path(directory)), patch.object(runner, "planned_jobs", return_value=[job]), patch.dict(sys.modules, {"openai": fake_openai}), patch.dict(os.environ, {"BAZE_API_KEY": "test-only"}):
                 with contextlib.redirect_stdout(io.StringIO()):
                     runner.generate(True)
                     runner.generate(True)
+                factory.assert_called_with(api_key="test-only", base_url="https://factchat-cloud.mindlogic.ai/v1/gateway", max_retries=0)
                 self.assertEqual(client.responses.create.call_count, 1)
                 request = client.responses.create.call_args.kwargs
                 self.assertEqual(request["input"], "raw prompt")
                 self.assertEqual(request["model"], "gpt-5.6-sol")
-                self.assertEqual(request["reasoning"], {"mode": "standard", "effort": "low"})
+                self.assertEqual(request["reasoning"], {"mode": "standard", "effort": "none"})
                 for omitted in ("previous_response_id", "conversation", "temperature", "top_p", "top_logprobs", "max_output_tokens"):
                     self.assertNotIn(omitted, request)
                 saved = runner.read_jsonl(Path(directory) / "generations.jsonl")
@@ -62,12 +65,30 @@ class ExperimentRunnerTests(unittest.TestCase):
                 self.assertEqual(saved[0]["raw_prompt"], job["prompt"])
                 self.assertEqual(saved[0]["generated_code"], response.output_text)
                 self.assertEqual(saved[0]["raw_response"], {"output": "raw response"})
+                self.assertEqual(saved[0]["api_provider"], "baze_gateway")
                 self.assertEqual((saved[0]["input_tokens"], saved[0]["output_tokens"], saved[0]["reasoning_tokens"], saved[0]["total_tokens"]), (20, 17, 5, 37))
                 self.assertEqual(saved[0]["raw_usage"], raw_usage)
                 self.assertEqual((saved[0]["response_id"], saved[0]["response_model"], saved[0]["response_status"]), ("response-id", "gpt-5.6-sol", "completed"))
                 self.assertGreaterEqual(saved[0]["latency_seconds"], 0)
                 self.assertEqual(saved[0]["retry_count"], 0)
                 self.assertIsNone(saved[0]["cache_write_tokens"])
+
+    def test_generate_max_jobs_stops_after_first_pending_job(self):
+        jobs = [
+            {"job_id": "task_C1", "task_id": "task", "condition_id": "C1", "prompt": "first"},
+            {"job_id": "task_C2", "task_id": "task", "condition_id": "C2", "prompt": "second"},
+        ]
+        response = SimpleNamespace(
+            usage=None, output_text="code", model="gpt-5.6-sol", id="response-id",
+            status="completed", model_dump=lambda **_: {"output": "raw response"},
+        )
+        client = SimpleNamespace(responses=SimpleNamespace(create=Mock(return_value=response)))
+        with tempfile.TemporaryDirectory(dir=runner.ROOT) as directory:
+            with patch.object(runner, "RESULTS", Path(directory)), patch.object(runner, "planned_jobs", return_value=jobs), patch.dict(sys.modules, {"openai": SimpleNamespace(OpenAI=lambda **_: client)}), patch.dict(os.environ, {"BAZE_API_KEY": "test-only"}):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    runner.generate(True, 1)
+                self.assertEqual(client.responses.create.call_count, 1)
+                self.assertEqual([row["job_id"] for row in runner.read_jsonl(Path(directory) / "generations.jsonl")], ["task_C1"])
 
     def test_evaluate_preserves_code_and_resumes(self):
         code = "```java\npublic void x() {}\n```"

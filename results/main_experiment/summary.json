@@ -1,0 +1,73 @@
+{
+  "jobs": 1816,
+  "generated": 1816,
+  "evaluated": 1816,
+  "pass": 671,
+  "fail": 1145,
+  "conditions": [
+    {
+      "condition_id": "C1",
+      "jobs": 227,
+      "generated": 227,
+      "evaluated": 227,
+      "pass": 62,
+      "fail": 165
+    },
+    {
+      "condition_id": "C2",
+      "jobs": 227,
+      "generated": 227,
+      "evaluated": 227,
+      "pass": 111,
+      "fail": 116
+    },
+    {
+      "condition_id": "C3",
+      "jobs": 227,
+      "generated": 227,
+      "evaluated": 227,
+      "pass": 62,
+      "fail": 165
+    },
+    {
+      "condition_id": "C4",
+      "jobs": 227,
+      "generated": 227,
+      "evaluated": 227,
+      "pass": 107,
+      "fail": 120
+    },
+    {
+      "condition_id": "C5",
+      "jobs": 227,
+      "generated": 227,
+      "evaluated": 227,
+      "pass": 60,
+      "fail": 167
+    },
+    {
+      "condition_id": "C6",
+      "jobs": 227,
+      "generated": 227,
+      "evaluated": 227,
+      "pass": 100,
+      "fail": 127
+    },
+    {
+      "condition_id": "C7",
+      "jobs": 227,
+      "generated": 227,
+      "evaluated": 227,
+      "pass": 60,
+      "fail": 167
+    },
+    {
+      "condition_id": "C8",
+      "jobs": 227,
+      "generated": 227,
+      "evaluated": 227,
+      "pass": 109,
+      "fail": 118
+    }
+  ]
+}

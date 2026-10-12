@@ -21,3 +21,9 @@ The ground truth source is `CoderEval/CoderEval4Java.json`, whose `RECORDS` arra
 | `end_lineno` | `RECORDS.end_lineno` |
 
 The script parses the official log's task rows (`task_id ran passed cumulative_pass`), checks every source ID against the log, and retains only rows with `ran=1` and `passed=1`. The three expected failures and final dependency counts are comparison assertions, not filtering rules. `results/ground_truth_validation.csv` contains all 230 tasks and their observed PASS result. The validation JSON records counts, missing fields, duplicates, failures, and dependency distribution after reading the saved dataset back.
+
+## Research change record
+
+2026-10-12: Before the main experiment was complete, API cost review found that reasoning token cost exceeded expectations. Due to a resource constraint, `reasoning.effort` changed from `low` to `none`. The partial `low` results are preserved in `results/aborted_low_effort/` for reference and audit only. Final analysis will use only results regenerated from the start with `none`.
+
+After 1,035 completed `none` generations, direct OpenAI credit was exhausted. Subsequent generations use the BAZE Gateway with the same model and request settings. New rows carry `api_provider: "baze_gateway"`; the first 1,035 rows have no `api_provider` field and represent `openai_direct`. Their saved JSONL bytes remain unchanged.

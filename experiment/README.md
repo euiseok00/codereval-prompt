@@ -1,29 +1,75 @@
-# Canonical Java experiment dataset
+# Main Java prompt experiment
 
-Run `python experiment/scripts/build_experiment_dataset.py` from this repository to rebuild `experiment/data/experiment_tasks.jsonl`, `results/ground_truth_validation.csv`, and `results/experiment_dataset_validation.json`. The script reads the preserved official run log at `results/groundtruth_official.log`; it does not run GroundTruth.py.
+This directory contains the current CoderEval Java prompt experiment.
 
-The ground truth source is `CoderEval/CoderEval4Java.json`, whose `RECORDS` array has 230 tasks. The signature source is `CoderEval/CoderEval-Input4Models.zip`, member `CoderEval-Input4Models/CEJavaRaw.jsonl`, whose JSONL rows have `question_id`, `input`, `signature`, and `docstring`. The Raw file has 239 unique IDs. All 230 ground truth IDs match exactly one Raw row using `RECORDS._id = question_id`; the nine additional Raw rows are outside the ground truth source. Method names are not used for joining.
+## Data flow
 
-| Canonical field | Source field |
-| --- | --- |
-| `experiment_index` | Sequential, one-based index in original `RECORDS` order after PASS filtering |
-| `task_id` | `CoderEval4Java.json` → `RECORDS._id` |
-| `project` | `RECORDS.project` |
-| `class_name` | `RECORDS.class_name` |
-| `file_name` | `RECORDS.file_name` |
-| `package` | `RECORDS.package` |
-| `method_name` | `RECORDS.name` |
-| `human_label` | `RECORDS.human_label` |
-| `dependency_level` | `RECORDS.level` |
-| `signature` | `CEJavaRaw.jsonl` → `signature` (used verbatim) |
-| `ground_truth_code` | `RECORDS.code` |
-| `lineno` | `RECORDS.lineno` |
-| `end_lineno` | `RECORDS.end_lineno` |
+```text
+CoderEval/CoderEval4Java.json
+        +
+CoderEval/CoderEval-Input4Models.zip (CEJavaRaw.jsonl)
+        +
+results/validation/GroundTruthJava.log
+        |
+        v
+experiment/data/CEJavaPrompt.jsonl
+        |
+        v
+experiment/data/CEJavaPromptJobs.jsonl
+        |
+        v
+results/main/GenerateResultJava/Run1.jsonl
+results/main/GenerateResultJava/Run2.jsonl
+results/main/GenerateResultJava/Run3.jsonl
+        |
+        v
+results/main/EvaluateResultJava/Run1.jsonl
+results/main/EvaluateResultJava/Run2.jsonl
+results/main/EvaluateResultJava/Run3.jsonl
+        |
+        v
+results/main/AnalysisJava/
+```
 
-The script parses the official log's task rows (`task_id ran passed cumulative_pass`), checks every source ID against the log, and retains only rows with `ran=1` and `passed=1`. The three expected failures and final dependency counts are comparison assertions, not filtering rules. `results/ground_truth_validation.csv` contains all 230 tasks and their observed PASS result. The validation JSON records counts, missing fields, duplicates, failures, and dependency distribution after reading the saved dataset back.
+`CEJavaPrompt.jsonl` contains the 227 Java tasks whose ground-truth implementation passed the preserved CoderEval validation run. It keeps only the fields used by the experiment or analysis: `task_id`, `method_name`, `human_label`, `signature`, and `dependency_level`.
 
-## Research change record
+`CEJavaPromptJobs.jsonl` expands those 227 tasks into the eight Persona × Signature × CoT conditions, producing 1,816 jobs. The same 1,816 jobs are executed independently three times.
 
-2026-10-12: Before the main experiment was complete, API cost review found that reasoning token cost exceeded expectations. Due to a resource constraint, `reasoning.effort` changed from `low` to `none`. The partial `low` results are preserved in `results/aborted_low_effort/` for reference and audit only. Final analysis will use only results regenerated from the start with `none`.
+## Conditions
 
-After 1,035 completed `none` generations, direct OpenAI credit was exhausted. Subsequent generations use the BAZE Gateway with the same model and request settings. New rows carry `api_provider: "baze_gateway"`; the first 1,035 rows have no `api_provider` field and represent `openai_direct`. Their saved JSONL bytes remain unchanged.
+| Condition | Persona | Signature | CoT |
+| --- | --- | --- | --- |
+| C1 | OFF | OFF | OFF |
+| C2 | OFF | ON | OFF |
+| C3 | OFF | OFF | ON |
+| C4 | OFF | ON | ON |
+| C5 | ON | OFF | OFF |
+| C6 | ON | ON | OFF |
+| C7 | ON | OFF | ON |
+| C8 | ON | ON | ON |
+
+## Model settings
+
+- Model: `gpt-5.6-sol`
+- Reasoning effort: `none`
+- Temperature: `0.6`
+- Independent runs: `3`
+- Primary correctness metrics: `Pass@1`, `Pass@3`
+
+## Commands
+
+```bash
+python experiment/scripts/BuildCEJavaPrompt.py
+python experiment/scripts/RunCEJavaPrompt.py plan
+
+python experiment/scripts/RunCEJavaPrompt.py generate --run 1 --confirm-full-run
+python experiment/scripts/RunCEJavaPrompt.py evaluate --run 1
+python experiment/scripts/RunCEJavaPrompt.py generate --run 2 --confirm-full-run
+python experiment/scripts/RunCEJavaPrompt.py evaluate --run 2
+python experiment/scripts/RunCEJavaPrompt.py generate --run 3 --confirm-full-run
+python experiment/scripts/RunCEJavaPrompt.py evaluate --run 3
+
+python experiment/scripts/AnalyzeCEJavaPrompt.py
+```
+
+The prior one-run experiment and its analysis are preserved under `experiment/archive/previous_experiment/` and `results/archive/previous_experiment/`.

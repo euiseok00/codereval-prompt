@@ -1,11 +1,11 @@
 {
-  "raw_member": "CoderEval-Input4Models/CEJavaRaw.jsonl",
+  "source": "CoderEval/CoderEval4Java.json",
+  "signature_source": "CoderEval-Input4Models/CEJavaRaw.jsonl",
   "join_key": "CoderEval4Java.json _id = CEJavaRaw.jsonl question_id",
   "original_task_count": 230,
-  "raw_task_count": 239,
-  "pass_count": 227,
-  "fail_count": 3,
-  "fail_tasks": [
+  "selected_task_count": 227,
+  "failed_ground_truth_count": 3,
+  "failed_ground_truth_tasks": [
     {
       "task_id": "6367667f1a6d9265ec01745c",
       "method_name": "addToClassPath"
@@ -19,16 +19,6 @@
       "method_name": "readFrom"
     }
   ],
-  "expected_fail_match": true,
-  "dataset_task_count": 227,
-  "unique_task_id_count": 227,
-  "duplicate_task_id_count": 0,
-  "missing": {
-    "signature": 0,
-    "human_label": 0,
-    "ground_truth_code": 0,
-    "dependency_level": 0
-  },
   "dependency_distribution": {
     "self_contained": 55,
     "class_runnable": 98,
@@ -37,5 +27,11 @@
     "project_runnable": 43,
     "plib_runnable": 5
   },
-  "expected_dependency_match": true
+  "missing_fields": {
+    "task_id": 0,
+    "method_name": 0,
+    "human_label": 0,
+    "signature": 0,
+    "dependency_level": 0
+  }
 }

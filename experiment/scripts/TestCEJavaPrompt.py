@@ -46,7 +46,7 @@ class MainExperimentTests(unittest.TestCase):
 
     def test_failure_classification(self):
         self.assertEqual(runner.classify_failure({"errormessage": "compile error"}), "COMPILE_ERROR")
-        self.assertEqual(runner.classify_failure({"errormessage": "exec error!"}), "RUNTIME_ERROR")
+        self.assertEqual(runner.classify_failure({"errormessage": "exec error!"}), "EXEC_ERROR")
         self.assertEqual(runner.classify_failure({"errormessage": ""}), "TEST_FAILURE")
 
 

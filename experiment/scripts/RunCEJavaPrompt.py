@@ -268,7 +268,7 @@ def classify_failure(outcome):
     if message == "compile error":
         return "COMPILE_ERROR"
     if message == "exec error!":
-        return "RUNTIME_ERROR"
+        return "EXEC_ERROR"
     return "TEST_FAILURE"
 
 
